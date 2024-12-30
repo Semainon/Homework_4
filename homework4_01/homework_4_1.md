@@ -1,217 +1,92 @@
-### Д3 3.1. Написать скрипт, который будет спрашивать имя пользователя и на основе ввода показывать нужную строчку из /etc/passwd.
+### Д3 4.1. Написать Dockerfile, который собирает:
+- **nginx как http-интерфейс для Wordpress**
+- **PostgreSQL**
+- **Wordpress**
 
-**Дополнительно:**
-
-1. **Вывод информации из `/etc/passwd`**: 
-   - Также скрипт выводит построчно:
-     - **Шелл пользователя**
-     - **Домашняя директория пользователя**
-     - **Список групп, в которых он состоит**
-
-2. **Изменение параметров пользователя: запрос и корректировка изменений, проверка доступности внесения изменений**: 
-   - Скрипт должен спросить, что следует поменять:
-     - **UID**: Если uid, то сначала проверить, доступен ли такой uid, если нет – то один раз предложить ввести заново..
-     - **Домашнюю директорию**: Если домашнюю директорию, то спросить, на какую директорию следует сменить, а также следует ли перемещать домашнюю директорию.
-     - **Группу**: Если группу – то следует спросить, меняем ли мы основную группу или дополнительную.
-
-7. **Вывод итоговой команды**: 
-   - После всех изменений, скрипт должен вывести на экран итоговую команду, которая будет выполнена для изменения параметров пользователя.
-
-
-### Команды 
-
-1. Создаем директорию scripts для всех скриптов в домашнем каталоге.
+### Общая структура файлов проекта, исходя из пунктов 1-6 ДЗ №4
 ```bash
-mkdir ~/scripts
-cd ~/scripts
+# Итоговая структура файлов проекта
+# Несколько Dockerfile дают возможность изолировать каждый сервис (для лучшей управляемости и масштабирумости)
+wordpress_nginx_postgres_setup/
+│
+├── .env
+├── docker-compose.yml
+├── nginx/
+│   ├── Dockerfile
+│   └── nginx.conf
+├── wordpress/
+│   └── Dockerfile
+├── python_server/
+│   ├── app.py
+│   └── Dockerfile
+└── grafana/
+    └── docker-compose.yml
 ```
-2. Проверка доступных локалей и при необходимости установка пакета для русской локали, чтобы не было проблем с кодировкой	
+### Установка Docker и Docker Compose	
 ```bash
-locale -a
-sudo dnf install glibc-langpack-ru  # для CentOS/RHEL/Oracle Linux
-# если посое перезагрузки терминала не будет корректно отображаться русский текст, дополнительно: 
-locale -a # проверяем, что русская локаль доступна
-# установливаем переменные окружения: 
-export LANG=ru_RU.UTF-8
-export LC_ALL=ru_RU.UTF-8 
-source ~/.bashrc 
-# перезагружаем терминал и снова проверяем локаль 
-locale
+sudo yum update -y
+sudo yum install -y yum-utils
+
+# Установка Docker    
+sudo yum-config-manager --add-repo https://download.docker.com/linux/centos/docker-ce.repo 
+sudo yum install -y docker-ce docker-ce-cli containerd.io 
+sudo systemctl start docker  # запускаем Docker 
+sudo systemctl enable docker # добавляем Docker в автозагругку
+# Опционально: добавляем пользователя в группу Docker, чтобы запускать команды Docker без sudo
+# sudo systemctl stop sssd
+# sudo rm -rf /var/lib/sss/db/*
+# sudo systemctl start sssd
+sudo usermod -aG docker $USER  
+# Проверяем установку
+sudo docker --version
+sudo docker run hello-world
+sudo systemctl status docker
+
+# Установка Docker Compose   
+sudo curl -L "https://github.com/docker/compose/releases/latest/download/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose yml
+sudo chmod +x /usr/local/bin/docker-compose 
+docker-compose --version 
 ```
-3. Создаем файл скрипта, делаем его исполняемым и запускаем. 
-```bash 
-nano user_info.sh
-chmod +x user_info.sh
-./user_info.sh
-```
-
-### Создаем тестового юзера, тестируем скрипт  
-> **Права и параметры по умолчанию:**
->  
-> - **Домашняя директория** Если используется опцию -m, для юзера создается домашняя директория (например, /home/testuser), где он будет хранить свои файлы.
-> - **Права на домашнюю директорию:** По умолчанию, домашняя директория нового юзера будет иметь права `700` (т.е. только владелец имеет право читать, записывать и выполнять). Это означает, что только сам user может получить доступ к своей домашней директории.
-> - **Права на файлы:** Файлы, создаваемые юзером, будут иметь права по умолчанию, которые зависят от текущих настроек `umask`. Обычно это `644` для файлов (чтение и запись для владельца, чтение для группы и других) и `755` для директорий (чтение, запись и выполнение для владельца, чтение и выполнение для группы и других).
-> - **Группы:** Новый юзер будет добавлен в свою собственную группу с тем же именем, что и имя пользователя. Например, для пользователя testuser будет создана группа testuser. Пользователь имеет права на управление файлами в своей группе.
-> - **Отсутствие прав sudo:** По умолчанию новый юзер не имеет прав sudo – не может выполнять команды с повышенными привилегиями без дополнительной настройки.
-
-```bash 
-sudo useradd -m testuser  # -m создаст домашнюю директорию для пользователя.
-sudo passwd testuser # устанавливем пароль 
-sudo groupadd developers  # создаем 2 тестовые группы developers, dev
-sudo groupadd dev            
-sudo usermod -a -G developers testuser # в группу developers добавляем тестового пользователя testuser
-sudo userdel -r testuser  # после тестов удаляем тестового пользователя, опция -r удаляет также его домашнюю директорию
-id testuser # если удаление прошло корректно, будет сообщение, что пользователь не найден.
-sudo groupdel dev  # удаляем тестовые группы
-sudo groupdel developers
-grep -E '^dev:|^developers:' /etc/group # проверка удаления групп
-```
-
-### Терминал
-
-```bash 
-[root@Zero ~]# locale -a
-[root@Zero ~]# sudo dnf install glibc-langpack-ru
-[root@Zero ~]# sudo useradd -m testuser
-[root@Zero ~]# sudo passwd testuser
-[root@Zero ~]# mkdir ~/scripts
-[root@Zero ~]# cd ~/scripts
-[root@Zero scripts]# nano user_info.sh 
-[root@Zero scripts]# chmod +x user_info.sh
-[root@Zero scripts]# ./user_info.sh          # тестируем смену uid   
-Введите имя пользователя: testuser    
-Информация о пользователе testuser (UID: 1000)
-Шелл: /bin/bash                     
-Домашняя директория: testuser
-Группы: testuser : testuser
-Что вы хотите изменить? (uid, домашнюю директорию, группу) 
-Введите ваш выбор: uid
-Введите новый UID: 59
-UID 59 уже занят. Попробуйте другой.
-Введите новый UID: 1000
-Итоговая команда: sudo usermod -u 1000 testuser
-UID пользователя testuser изменен на 1000.
-
-[root@Zero scripts]# ./user_info.sh          # тестируем смену домашней директории 
-Введите имя пользователя: testuser
-Информация о пользователе testuser (UID: 1000)
-Шелл: /bin/bash
-Домашняя директория: testuser
-Группы: testuser : testuser
-Что вы хотите изменить? (uid, домашнюю директорию, группу)
-Введите ваш выбор: домашнюю директорию
-Введите новую домашнюю директорию: delme            
-Переместить текущую домашнюю директорию? (y/n): y
-Итоговая команда: sudo usermod -d delme -m testuser
-usermod: directory delme exists
-Домашняя директория пользователя testuser изменена на delme и перемещена.
-
-[root@Zero scripts]# ./user_info.sh          # тестируем смену основной группы
-Введите имя пользователя: testuser
-Информация о пользователе testuser (UID: 1000)
-Шелл: /bin/bash
-Домашняя директория: delme
-Группы: testuser : testuser developers dev
-Что вы хотите изменить? (uid, домашнюю директорию, группу)
-Введите ваш выбор: группу
-Введите новую группу: dev
-Меняем ли мы основную группу или дополнительную? (основная/дополнительная): основная
-Итоговая команда: sudo usermod -g dev testuser
-Основная группа пользователя testuser изменена на dev.
-
-
-[root@Zero scripts]# ./user_info.sh            # тестируем  добавления в дополнительную группу
-Введите имя пользователя: testuser
-Информация о пользователе testuser (UID: 1000)
-Шелл: /bin/bash
-Домашняя директория: delme
-Группы: testuser : testuser developers
-Что вы хотите изменить? (uid, домашнюю директорию, группу)
-Введите ваш выбор: группу
-Введите новую основную группу: dev
-Меняем ли мы основную группу или дополнительную? (основная/дополнительная): дополнительная
-Итоговая команда: sudo usermod -aG dev testuser
-Пользователь testuser добавлен в дополнительную группу dev.
-
-
-```
-
-### user_info.sh v.2 | Скрипт выводит информацию о пользователе и применяет изменения по запросу. 
-
 ```bash
-#!/bin/bash
+[root@Zero ~]# cd /root/wordpress_nginx_postgres_setup && mkdir nginx wordpress python_server grafana
+[root@Zero wordpress_nginx_postgres_setup]# 
+[root@Zero wordpress_nginx_postgres_setup]# cd nginx
+[root@Zero nginx]# nano nginx.conf
+[root@Zero nginx]# nano Dockerfile
+[root@Zero nginx]# cd ..
+[root@Zero wordpress_nginx_postgres_setup]# cd wordpress && nano Dockerfile
+```
+###  Dockerfile для nginx
+```bash
+# Используем официальный образ NGINX
+FROM nginx:latest
 
-# Запрос имени пользователя
-read -p "Введите имя пользователя: " username
+# Копируем файл конфигурации nginx.conf в контейнер
+COPY ./nginx/nginx.conf /etc/nginx/nginx.conf
 
-# Получение информации о пользователе
-user_info=$(getent passwd "$username")
+# Копируем файлы  веб-приложения из папки wordpress
+COPY ./wordpress /usr/share/nginx/html
 
-if [ -z "$user_info" ]; then
-    echo "Пользователь $username не найден."
-    exit 1
-fi
+# Открываем порт 80 для HTTP
+EXPOSE 80
 
-# Вывод информации о пользователе
-IFS=':' read -r user _ uid gid _ home shell <<< "$user_info"
-echo "Информация о пользователе $username (UID: $uid)"
-echo "Шелл: $shell"
-echo "Домашняя директория: $home"
-echo "Группы: $(groups "$username")"
+# Запускаем NGINX с указанием конфигурационного файла
+CMD ["nginx", "-g", "daemon off;"]
 
-# Запрос на изменение параметров
-echo "Что вы хотите изменить? (uid, домашнюю директорию, группу)"
-read -p "Введите ваш выбор: " change_option
+[root@Zero nginx]# cd ..
+[root@Zero wordpress_nginx_postgres_setup]# cd wordpress && nano Dockerfile
+```
+### Dockerfile для wordpress
+```bash 
+# Используем официальный образ WordPress
+FROM wordpress:latest
 
-case $change_option in
-    uid)
-        while true; do
-            read -p "Введите новый UID: " new_uid
-            if ! id -u "$new_uid" >/dev/null 2>&1; then
-                echo "Итоговая команда: sudo usermod -u $new_uid $username"
-                sudo usermod -u "$new_uid" "$username"
-                echo "UID пользователя $username изменен на $new_uid."
-                break
-            else
-                echo "UID $new_uid уже занят. Попробуйте другой."
-            fi
-        done
-        ;;
-    "домашнюю директорию")
-        read -p "Введите новую домашнюю директорию: " new_home
-        read -p "Переместить текущую домашнюю директорию? (y/n): " move_home
-        if [ "$move_home" == "y" ]; then
-            echo "Итоговая команда: sudo usermod -d $new_home -m $username"
-            sudo usermod -d "$new_home" -m "$username"
-            echo "Домашняя директория пользователя $username изменена на $new_home и перемещена."
-        else
-            echo "Итоговая команда: sudo usermod -d $new_home $username"
-            sudo usermod -d "$new_home" "$username"
-            echo "Домашняя директория пользователя $username изменена на $new_home."
-        fi
-        ;;
-    "группу")
-        read -p "Введите новую группу: " new_group
-        read -p "Меняем ли мы основную группу или дополнительную? (основная/дополнительная): " group_type
-        if getent group "$new_group" >/dev/null; then
-            if [ "$group_type" == "основная" ]; then
-                echo "Итоговая команда: sudo usermod -g $new_group $username"
-                sudo usermod -g "$new_group" "$username"
-                echo "Основная группа пользователя $username изменена на $new_group."
-            elif [ "$group_type" == "дополнительная" ]; then
-                echo "Итоговая команда: sudo usermod -aG $new_group $username"
-                sudo usermod -aG "$new_group" "$username"
-                echo "Пользователь $username добавлен в дополнительную группу $new_group."
-            else
-                echo "Ошибка: неверный тип группы. Пожалуйста, выберите 'основная' или 'дополнительная'."
-            fi
-        else
-            echo "Ошибка: группа '$new_group' не существует."
-        fi
-        ;;
-    *)
-        echo "Неверный выбор. Пожалуйста, выберите uid, домашнюю директорию или группу."
-        exit 1
-        ;;
-esac
-'''   
+# Установка необходимых расширений PHP для PostgreSQL и MySQL 
+RUN docker-php-ext-install pdo pdo_pgsql mysqli
+
+# Установка прав доступа
+RUN chown -R www-data:www-data /var/www/html
+
+# Открытие порта 80 для HTTP
+EXPOSE 80
+```
