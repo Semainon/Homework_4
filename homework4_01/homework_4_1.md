@@ -6,21 +6,26 @@
 ### Общая структура файлов проекта, исходя из пунктов 1-6 ДЗ №4
 ```bash
 # Итоговая структура файлов проекта
-# Несколько Dockerfile дают возможность изолировать каждый сервис (для лучшей управляемости и масштабирумости)
-wordpress_nginx_postgres_setup/
-│
+# Несколько Dockerfile дают возможность изолировать сервисы (для лучшей управляемости и масштабирумости)
+wwordpress_nginx_postgres_setup/
 ├── .env
 ├── docker-compose.yml
 ├── nginx/
 │   ├── Dockerfile
+│   ├── html/
 │   └── nginx.conf
-├── wordpress/
-│   └── Dockerfile
+├── php-fpm/
+│   ├── Dockerfile
+│   ├── php-fpm.conf
+│   └── www.conf
 ├── python_server/
 │   ├── app.py
 │   └── Dockerfile
+├── wordpress/
+│   ├── Dockerfile
+│   ├── install-wordpress.sh
+│   └── wp-config.php
 └── grafana/
-    └── docker-compose.yml
 ```
 ### Установка Docker и Docker Compose	
 ```bash

@@ -29,8 +29,7 @@ wordpress_nginx_postgres_setup/
 │   ├── Dockerfile
 │   ├── install-wordpress.sh
 │   └── wp-config.php
-└── grafana/
-    └── docker-compose.yml
+└── grafana
 
 ```
 ### Создаем .env файл для хранения конфигурационных настроек и переменных окружения проекта	
@@ -137,7 +136,9 @@ networks:
   wordpress_network:
     driver: bridge  # Указываем драйвер сети
 ```
-### WordPress Создаем необходимые файлы и папки 
+### Создаем необхлодимые директории и файлы 
+
+### WordPress  
 ```bash 
 [root@Zero wordpress]# ls 
 Dockerfile  install-wordpress.sh  wp-config.php
@@ -180,7 +181,6 @@ RUN apt-get update && apt-get install -y \
 RUN mkdir -p /var/www/html && \
     chown -R www-data:www-data /var/www/html && \
     chmod -R 775 /var/www/html
-
 
 # Установка прав доступа для wp-content
 RUN chown -R www-data:www-data /var/www/html/wp-content
@@ -327,14 +327,12 @@ RUN mkdir -p /var/run/php && \
 # Устанавливаем рабочую директорию
 WORKDIR /var/www/html
 
-
 [root@Zero php-fpm]# cat php-fpm.conf
 [global]
 error_log = /var/log/php-fpm.log
 log_level = notice
 
 include=/usr/local/etc/php-fpm.d/*.conf
-
 
 [root@Zero php-fpm]# cat www.conf 
 [www]
@@ -421,7 +419,6 @@ sudo systemctl status certbot.timer
 [root@Zero wordpress_nginx_postgres_setup]# cp ./services.html wordpress_nginx_postgres_setup-nginx-1:/var/www/html/test.php
 ```
 
-
 ### Конфиг для мспользования сокета для PHP-FPM в Nginx 
 ```bash  
 docker exec -it wordpress_nginx_postgres_setup-php-fpm-1 /bin/bash # подлючаемся к терминалу контейнера php-fpm
@@ -450,5 +447,3 @@ php_admin_value[error_log] = /var/log/php-fpm/www-error.log
 php_admin_flag[log_errors] = on
 EOL
 ```
-
-
