@@ -1,0 +1,13 @@
+DO
+$$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1
+        FROM pg_roles
+        WHERE rolname = '${SUPERUSER_NAME}'
+    ) THEN
+        CREATE ROLE ${SUPERUSER_NAME} WITH LOGIN PASSWORD '${SUPERUSER_PASSWORD}';
+        ALTER ROLE ${SUPERUSER_NAME} SUPERUSER;
+    END IF;
+END
+$$;
