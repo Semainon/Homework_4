@@ -3,7 +3,7 @@
 - **PostgreSQL**
 - **Wordpress**
 
-### Cтруктура файлов проекта
+### Предварительная структура файлов проекта
 ```bash
 # Несколько Dockerfile дают возможность изолировать сервисы (для лучшей управляемости и масштабирумости)
 wwordpress_nginx_postgres_setup/
@@ -53,7 +53,6 @@ docker-compose --version
 ```
 ```bash
 [root@Zero ~]# cd /root/wordpress_nginx_postgres_setup && mkdir nginx wordpress python_server grafana
-[root@Zero wordpress_nginx_postgres_setup]# 
 [root@Zero wordpress_nginx_postgres_setup]# cd nginx
 [root@Zero nginx]# nano nginx.conf
 [root@Zero nginx]# nano Dockerfile
