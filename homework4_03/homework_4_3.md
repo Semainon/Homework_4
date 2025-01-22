@@ -1,6 +1,6 @@
 ### Д3 4.3 Написать docker-compose.yaml, который реализует Grafana. Данные в TSDB этой Grafana-ы наполняются из значений метрик PostgreSQL из задания выше.
 
-### Общая структура проекта, исходя из пунктов 1-6 ДЗ №4
+### Структура проекта
 ```bash
 wordpress_nginx_postgres_setup/
 ├── .env

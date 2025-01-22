@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>О проекте</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            margin: 0;
+            padding: 0;
+            background-color: #f4f4f4;
+        }
+        header {
+            background: #35424a;
+            color: #ffffff;
+            padding: 10px 0;
+            text-align: center;
+        }
+        h1, h2 {
+            margin: 20px 0;
+        }
+        main {
+            padding: 20px;
+            background: #ffffff;
+            max-width: 800px;
+            margin: 20px auto;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+        ul {
+            list-style-type: disc;
+            margin-left: 20px;
+        }
+        footer {
+            text-align: center;
+            padding: 10px 0;
+            background: #35424a;
+            color: #ffffff;
+            position: relative;
+            bottom: 0;
+            width: 100%;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>Описание проекта</h1>
+    </header>
+    <main>
+        <section>
+            <h2>Введение</h2>
+            <p>Данный проект представляет собой комплексное решение для развертывания веб-приложений с использованием контейнеризации и современных технологий. Основные компоненты включают в себя Nginx, PostgreSQL, Django, WordPress, а также инструменты для мониторинга и CI/CD.</p>
+        </section>
+
+        <section>
+            <h2>Технологическая архитектура</h2>
+            <p>Проект включает следующие ключевые компоненты:</p>
+            <ul>
+                <li><strong>Nginx</strong>: Используется в качестве HTTP-интерфейса для WordPress.</li>
+                <li><strong>PostgreSQL</strong>: Реляционная база данных, которая хранит данные WordPress и предоставляет возможности для масштабирования.</li>
+                <li><strong>WordPress</strong>: Cистема управления контентом, используемая для создания и управления веб-сайтами.</li>
+            </ul>
+        </section>
+
+        <section>
+            <h2>Контейнеризация с Docker</h2>
+            <p>Для развертывания всех компонентов используется <a href="https://www.docker.com/">Docker</a>. Основные файлы конфигурации включают:</p>
+            <ul>
+                <li><strong>Dockerfile</strong>: Определяет процесс сборки образов для Nginx, PostgreSQL, Django и WordPress.</li>
+                <li><strong>docker-compose.yaml</strong>: Обеспечивает координацию между контейнерами, включая настройку переменных окружения для суперпользователя PostgreSQL и конфигурацию WordPress.</li>
+            </ul>
+        </section>
+
+        <section>
+            <h2>Мониторинг с Grafana</h2>
+            <p>В проекте также реализован мониторинг с использованием <a href="https://grafana.com/">Grafana</a>. Данные о метриках PostgreSQL передаются в Grafana для визуализации и анализа производительности системы.</p>
+        </section>
+
+        <section>
+            <h2>Контейнеризация веб-сервера</h2>
+            <p>В рамках проекта был контейнеризован веб-сервер на Python/Django.</p>
+        </section>
+
+        <section>
+            <h2>Модернизация конфигурации</h2>
+            <p>Конфигурация Nginx была модернизирована для хранения логов и конфигурационных файлов вне Docker volume, что обеспечивает более гибкое управление и доступ к логам.</p>
+            <p>При обращении к HTTP-пути <code>/myWebBack</code> открывается страница сервера, реализованного на Python/Django.</p>
+        </section>
+
+        <section>
+            <h2>CI/CD Pipeline</h2>
+            <p>В проекте реализован CI/CD pipeline, который:</p>
+            <ul>
+                <li>Использует переменные для управления конфигурацией (имена пользователей СУБД, пароли, номера портов и т.д.).</li>
+                <li>Тестирует сборку контейнера и его работу, включая доступность Grafana, работу WordPress и сервера на Python.</li>
+                <li>Доставляет собранный контейнер на конечную машину и запускает его.</li>
+            </ul>
+        </section>
+    </main>
+    <footer>
+        <p>&copy; 2025 Проект по контейнеризации веб-приложений</p>
+    </footer>
+</body>
+</html>

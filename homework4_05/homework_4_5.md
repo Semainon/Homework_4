@@ -22,13 +22,47 @@ volumes:
 ./nginx/nginx.conf: Путь к файлу конфигурации Nginx на хосте. 
 /etc/nginx/nginx.conf: Путь, по которому Nginx в контейнере будет искать файл конфигурации. Т.о., при запуске контейнера Nginx будет использовать наш локальный файл конфигурации вместо стандартного.
 ```
+### Структура файлов проекта
+```bash
+wordpress_nginx_postgres_setup/
+├── .env
+├── docker-compose.yml
+├── init-superuser.sql
+├── nginx/
+│   ├── Dockerfile
+│   ├── html/
+│   ├── nginx.conf     # Конфигурация nginx 
+│   └── logs/          # Папка для логов nginx
+├── php-fpm/
+│   ├── Dockerfile
+│   ├── php-fpm.conf
+│   └── www.conf
+├── python_server/
+│   ├── Dockerfile
+│   ├── requirements.txt
+│   ├── models.py
+│   └── zero/
+│       ├── __init__.py
+│       ├── settings.py
+│       ├── urls.py
+│       ├── views.py         
+│       ├── asgi.py
+│       ├── wsgi.py
+│       ├── setup.py
+│       └── templates/      
+│           └── about.html  
+├── wordpress/
+│   ├── Dockerfile
+│   ├── install-wordpress.sh
+│   └── wp-config.php
+```
 
 ### Создаем папку logs и обновлем блок nginx в docker-compose.yml (для nginx.conf условие уже реализовано)
 ```bash
 [root@Zero wordpress_nginx_postgres_setup]# mkdir -p ./nginx/logs
 [root@Zero wordpress_nginx_postgres_setup]# nano docker-compose.yml 
 
-# Редактируем блок  nginx
+# Редактируем блок nginx в docker-compose.yml 
   nginx:
     build:
       context: ./nginx  # Указываем путь к Dockerfile для Nginx
